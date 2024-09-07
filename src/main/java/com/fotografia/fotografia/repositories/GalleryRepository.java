@@ -13,5 +13,6 @@ public interface GalleryRepository extends JpaRepository<Gallery, Integer>{
 
     void deleteById(int id);
     Optional<Gallery> findByNameAndCategoryAndImageUrlAndAdmin(String name, String category, String imageUrl, Admin admin);
+    Optional<Gallery> findByIdAndAdminId(Long galleryId, Integer adminId);
     
 }
