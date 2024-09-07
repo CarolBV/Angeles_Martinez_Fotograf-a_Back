@@ -27,9 +27,4 @@ public class Gallery {
 @ManyToOne
 private Admin admin;
   
- 
-     
-   
-    
-    
 }

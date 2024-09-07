@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -15,6 +16,7 @@ import com.fotografia.fotografia.models.Gallery;
 
 import com.fotografia.fotografia.repositories.GalleryRepository;
 import com.fotografia.fotografia.security.AdminSecurity;
+import com.fotografia.fotografia.services.GalleryService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,19 +34,25 @@ public class GalleryController {
 
     @Autowired
    private GalleryRepository galleryRepository;
+   
+    @Autowired
+    private GalleryService galleryService;
 
     @GetMapping
     public List<Gallery> getAllImages() {
         return galleryRepository.findAll();
     }
 
-
 @PostMapping("/image")
-  public ResponseEntity<Gallery> addImage(@RequestBody Gallery gallery) {
+public ResponseEntity<Gallery> addImage(@RequestBody Gallery gallery) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || !authentication.isAuthenticated()) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    }
+    
     Gallery savedGallery = galleryRepository.save(gallery);
     return ResponseEntity.ok(savedGallery);
 }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteImage(@PathVariable Long id) {
