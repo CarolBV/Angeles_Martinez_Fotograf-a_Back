@@ -18,9 +18,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import com.fotografia.fotografia.services.AdminDetailsService;
+
+import com.fotografia.fotografia.services.CustomAdminDetailsService;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -35,42 +37,46 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig  {
 
-
+   
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
+    AuthenticationProvider authenticationProvider) throws Exception {
 
     http
-        .cors(Customizer.withDefaults()).csrf(csrf -> csrf.disable())
+        .cors(Customizer.withDefaults())
+        .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authz -> authz
             .requestMatchers(HttpMethod.POST, "/admin/create").permitAll()
             .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
-            .requestMatchers(HttpMethod.POST,"/gallery/image").permitAll()
+            .requestMatchers(HttpMethod.POST,"/gallery/image").authenticated()
             .anyRequest().authenticated())
             .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+         
             
-            
-        
       return http.build();
-}
-
-@Bean
-public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder,
-AdminDetailsService adminDetailsService) {
-    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-    authProvider.setUserDetailsService(adminDetailsService);
-    authProvider.setPasswordEncoder(passwordEncoder);
-    return authProvider;
 }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
       return new BCryptPasswordEncoder(); // Asegúrate de usar BCrypt
 }
+@Bean
+    public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder,
+            CustomAdminDetailsService customAdminDetailsService) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customAdminDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
+    }
+
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) 
+          throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
 }
     @Bean

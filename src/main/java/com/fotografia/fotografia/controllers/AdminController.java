@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fotografia.fotografia.models.Admin;
 import com.fotografia.fotografia.repositories.AdminRepository;
+import com.fotografia.fotografia.services.AdminDetailsService;
 
 @RestController
 @RequestMapping("/admin")
@@ -24,6 +27,8 @@ public class AdminController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AdminDetailsService adminDetailsService;
     
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -36,15 +41,14 @@ public class AdminController {
         return new ResponseEntity<>(saveAdmin, HttpStatus.CREATED);
     }
     @PostMapping("/login")
-    public ResponseEntity<String> loginAdmin(@RequestBody AdminLoginRequest loginRequest) {
+    public ResponseEntity<AuthResponse> loginAdmin(@RequestBody AdminLoginRequest adminLoginRequest) {
         try {
-            UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
-            authenticationManager.authenticate(authToken); // Autentica al admin
-    
-            return ResponseEntity.ok("Login exitoso");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales incorrectas");
+            AuthResponse response = adminDetailsService.login(adminLoginRequest);
+      return ResponseEntity.ok(response);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 }
 }
