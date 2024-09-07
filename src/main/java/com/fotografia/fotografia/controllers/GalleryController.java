@@ -7,15 +7,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fotografia.fotografia.models.Admin;
 import com.fotografia.fotografia.models.Gallery;
-
+import com.fotografia.fotografia.repositories.AdminRepository;
 import com.fotografia.fotografia.repositories.GalleryRepository;
-import com.fotografia.fotografia.security.AdminSecurity;
+
 import com.fotografia.fotografia.services.GalleryService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,22 +38,34 @@ public class GalleryController {
    
     @Autowired
     private GalleryService galleryService;
+    @Autowired
+    private AdminRepository adminRepository;
 
     @GetMapping
     public List<Gallery> getAllImages() {
         return galleryRepository.findAll();
     }
 
-@PostMapping("/image")
-public ResponseEntity<Gallery> addImage(@RequestBody Gallery gallery) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || !authentication.isAuthenticated()) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-    }
+    @PostMapping("/image")
+    public ResponseEntity<Gallery> addImage(@RequestBody Gallery gallery) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
     
-    Gallery savedGallery = galleryRepository.save(gallery);
-    return ResponseEntity.ok(savedGallery);
-}
+        // Obtener el admin autenticado por su nombre de usuario (extraído del token JWT)
+        Admin admin = adminRepository.findByUsername(authentication.getName())
+            .orElseThrow(() -> new UsernameNotFoundException("Admin no encontrado"));
+    
+        // Asignar el admin a la imagen
+        gallery.setAdmin(admin);
+    
+        // Guardar la imagen en la base de datos vinculada al admin
+        Gallery savedGallery = galleryRepository.save(gallery);
+        
+        return ResponseEntity.ok(savedGallery);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteImage(@PathVariable Long id) {
