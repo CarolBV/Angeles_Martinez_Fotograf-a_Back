@@ -21,10 +21,19 @@ public class GalleryService {
     @Autowired
     private AdminRepository adminRepository;
 
-    public Gallery saveImage(Gallery gallery) {
-    return galleryRepository.save(gallery);
-   
+    public void saveImage(String name, String category, String imageUrl, String publicId, String username) {
+        Admin admin = adminRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Admin no encontrado"));
+
+        Gallery gallery = new Gallery();
+        gallery.setName(name);
+        gallery.setCategory(category);
+        gallery.setImageUrl(imageUrl);
+        gallery.setCloudinaryPublicId(publicId);
+        gallery.setAdmin(admin);
+
+        galleryRepository.save(gallery);
     }
+
     
     public Gallery addImageToUser (Admin admin, Gallery gallery) {
         gallery.setAdmin(admin);
@@ -36,21 +45,7 @@ public class GalleryService {
     }
 
     public Gallery getImage(Integer adminId, Long galleryId) {
-        try{
-            Optional<Gallery> existingImage = getImageByIdAndAdminId(galleryId, adminId);
-            Gallery gallery = existingImage.get();
-            return gallery;
-        }catch (Error er) {
-            throw new RuntimeErrorsException(er);
-        }
+        return getImageByIdAndAdminId(galleryId, adminId)
+            .orElseThrow(() -> new RuntimeException("Imagen no encontrada o no accesible por el admin"));
     }
-    public void deleteImage (int id) {
-        Optional<Gallery> gallery = galleryRepository.findById(id);
-        if(gallery.isPresent()) {
-            galleryRepository.deleteById(id);
-        } else {
-            throw new RuntimeException("Esta imagen no existe");
-        }
-    }
-   
 }

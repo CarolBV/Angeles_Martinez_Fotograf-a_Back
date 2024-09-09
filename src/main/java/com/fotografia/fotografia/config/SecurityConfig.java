@@ -49,6 +49,7 @@ public class SecurityConfig  {
         .authorizeHttpRequests(authz -> authz
             .requestMatchers(HttpMethod.POST, "/admin/create").permitAll()
             .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
+            .requestMatchers(HttpMethod.GET, "/gallery").permitAll()
             .requestMatchers(HttpMethod.POST,"/gallery/image").authenticated()
             .anyRequest().authenticated())
             .sessionManagement(session -> session
@@ -87,7 +88,7 @@ public class SecurityConfig  {
                 registry.addMapping("/**")
                         .allowedOrigins("http://localhost:5173")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
+                        .allowedHeaders("Authorization", "Content-Type")
                         .allowCredentials(true);
             }
         };

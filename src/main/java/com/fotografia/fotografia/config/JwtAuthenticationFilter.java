@@ -17,6 +17,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+
 @Component
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -49,11 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Establecemos la autenticación en el contexto de seguridad
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
             }
+
         }
 
         // Continuamos con el filtro, esto debe estar siempre fuera del bloque if
         filterChain.doFilter(request, response);
+
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
@@ -63,5 +67,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return authHeader.substring(7); // Se elimina la palabra 'Bearer ' del token
         }
         return null;
+
     }
 }

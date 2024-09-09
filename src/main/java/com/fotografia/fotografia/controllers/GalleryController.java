@@ -1,28 +1,32 @@
 package com.fotografia.fotografia.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import java.io.IOException;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fotografia.fotografia.models.Admin;
 import com.fotografia.fotografia.models.Gallery;
 import com.fotografia.fotografia.repositories.AdminRepository;
 import com.fotografia.fotografia.repositories.GalleryRepository;
-
+import com.fotografia.fotografia.services.CloudinaryService;
 import com.fotografia.fotografia.services.GalleryService;
+
+
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+
 
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -35,6 +39,8 @@ public class GalleryController {
 
     @Autowired
    private GalleryRepository galleryRepository;
+   @Autowired
+    private CloudinaryService cloudinaryService;
    
     @Autowired
     private GalleryService galleryService;
@@ -42,29 +48,36 @@ public class GalleryController {
     private AdminRepository adminRepository;
 
     @GetMapping
-    public List<Gallery> getAllImages() {
-        return galleryRepository.findAll();
+    public ResponseEntity<List<Gallery>> getAllImages(Authentication authentication) {
+        String username = authentication.getName();
+        Admin admin = adminRepository.findByUsername(username)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin no encontrado"));
+    
+        List<Gallery> images = galleryRepository.findByAdminId(admin.getId());
+        return ResponseEntity.ok(images);
     }
-
     @PostMapping("/image")
-    public ResponseEntity<Gallery> addImage(@RequestBody Gallery gallery) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public ResponseEntity<?> uploadImage(
+        @RequestParam("file") MultipartFile file, 
+        @RequestParam("name") String name,
+        @RequestParam("category") String category,
+        Authentication authentication) {
         
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        try {
+            // Subir la imagen a Cloudinary
+            Map uploadResult = cloudinaryService.uploadImage(file);
+            String imageUrl = uploadResult.get("url").toString();
+            String publicId = uploadResult.get("public_id").toString();
+            
+            // Guardar la información en la base de datos
+            String username = authentication.getName();
+            galleryService.saveImage(name, category, imageUrl, publicId, username);
+            
+            return ResponseEntity.ok("Imagen subida exitosamente");
+        } catch (Exception e) {
+            e.printStackTrace();  // Esto imprimirá detalles del error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir la imagen");
         }
-    
-        // Obtener el admin autenticado por su nombre de usuario (extraído del token JWT)
-        Admin admin = adminRepository.findByUsername(authentication.getName())
-            .orElseThrow(() -> new UsernameNotFoundException("Admin no encontrado"));
-    
-        // Asignar el admin a la imagen
-        gallery.setAdmin(admin);
-    
-        // Guardar la imagen en la base de datos vinculada al admin
-        Gallery savedGallery = galleryRepository.save(gallery);
-        
-        return ResponseEntity.ok(savedGallery);
     }
 
     @DeleteMapping("/{id}")
