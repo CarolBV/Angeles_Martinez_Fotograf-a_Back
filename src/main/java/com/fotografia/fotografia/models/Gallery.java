@@ -22,8 +22,9 @@ public class Gallery {
     private Long id;
     private String name;
     private String category;
-    @Column(name = "imageUrl")
+    @Column(name = "image_url")
     private String imageUrl;
+    private String cloudinaryPublicId;
 @ManyToOne
 private Admin admin;
   

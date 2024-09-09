@@ -40,7 +40,7 @@ public class Admin {
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
     private List<Gallery> images = new ArrayList<>();
   
-    }
+    } 
     
   
   
