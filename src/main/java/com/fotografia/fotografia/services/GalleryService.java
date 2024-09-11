@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 import org.springframework.stereotype.Service;
-import com.fotografia.errors.RuntimeErrorsException;
+
 
 import com.fotografia.fotografia.models.Admin;
 import com.fotografia.fotografia.models.Gallery;

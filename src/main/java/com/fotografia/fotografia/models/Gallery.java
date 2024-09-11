@@ -1,7 +1,10 @@
 package com.fotografia.fotografia.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,7 +28,7 @@ public class Gallery {
     @Column(name = "image_url")
     private String imageUrl;
     private String cloudinaryPublicId;
-@ManyToOne
-private Admin admin;
-  
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
+    private Admin admin;
 }
