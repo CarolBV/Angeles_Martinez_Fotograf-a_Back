@@ -1,5 +1,6 @@
 package com.fotografia.fotografia.controllers;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ import com.fotografia.fotografia.services.GalleryService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
@@ -122,4 +123,51 @@ public class GalleryController {
         galleryRepository.delete(image);
         return ResponseEntity.noContent().build();
     }
-}
+    @PutMapping("/image/{id}")
+    public ResponseEntity<Gallery> updateImage(
+            @PathVariable Long id,
+            @RequestParam("name") String name,
+            @RequestParam("category") String category,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            Authentication authentication) {
+        try {
+            // Buscar la imagen en la base de datos
+            Gallery image = galleryRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada"));
+    
+            // Solo permitir que el admin logueado edite la imagen
+            String username = authentication.getName();
+            if (!image.getAdmin().getUsername().equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+    
+            // Actualizar nombre y categoría
+            image.setName(name);
+            image.setCategory(category);
+    
+            // Si se ha subido un nuevo archivo, actualizar la imagen en Cloudinary
+            if (file != null && !file.isEmpty()) {
+                // Eliminar la imagen antigua de Cloudinary
+                cloudinaryService.deleteImage(image.getCloudinaryPublicId());
+    
+                // Subir la nueva imagen a Cloudinary
+                Map uploadResult = cloudinaryService.uploadImage(file);
+                String imageUrl = uploadResult.get("url").toString();
+                String publicId = uploadResult.get("public_id").toString();
+    
+                // Actualizar los datos en la base de datos
+                image.setImageUrl(imageUrl);
+                image.setCloudinaryPublicId(publicId);
+            }
+    
+            // Guardar los cambios en la base de datos
+            galleryRepository.save(image);
+    
+            return ResponseEntity.ok(image);
+        } catch (IOException e) {
+            // Manejar la excepción en caso de error con Cloudinary o la subida del archivo
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+            }
+        }
