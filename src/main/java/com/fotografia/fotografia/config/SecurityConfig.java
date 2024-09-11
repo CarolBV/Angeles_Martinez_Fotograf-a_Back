@@ -52,7 +52,7 @@ public class SecurityConfig  {
             .requestMatchers(HttpMethod.GET, "/gallery", "/gallery/categories", "/gallery/category/**", "/gallery/image/**", "/gallery/random/images").permitAll()
             .requestMatchers(HttpMethod.POST,"/gallery/image").authenticated()
             .requestMatchers(HttpMethod.DELETE,"/gallery/id/**").authenticated()
-            .requestMatchers(HttpMethod.PUT,"/gallery/image/{id}").authenticated()
+            .requestMatchers(HttpMethod.PUT,"/gallery/image/**").authenticated()
             .anyRequest().authenticated())
             .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
