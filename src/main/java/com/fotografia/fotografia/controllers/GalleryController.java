@@ -71,7 +71,7 @@ public class GalleryController {
 
     @GetMapping("/category/{category}")
     public ResponseEntity<List<Gallery>> getImagesByCategory(@PathVariable String category) {
-        List<Gallery> images = galleryRepository.findByCategory(category);
+        List<Gallery> images = galleryRepository.findImagesByCategory(category);
         return ResponseEntity.ok(images);
     }
 
@@ -113,7 +113,7 @@ public class GalleryController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/id/{id}")
     public ResponseEntity<Void> deleteImage(@PathVariable Long id) {
         Gallery image = galleryRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,

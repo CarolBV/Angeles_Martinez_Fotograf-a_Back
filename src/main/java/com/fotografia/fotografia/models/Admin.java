@@ -3,6 +3,7 @@ package com.fotografia.fotografia.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -37,8 +38,9 @@ public class Admin {
     private String password;
 
     private String role;
-    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
-    private List<Gallery> images = new ArrayList<>();
+   @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
+@JsonManagedReference
+private List<Gallery> images = new ArrayList<>();
   
     } 
     
