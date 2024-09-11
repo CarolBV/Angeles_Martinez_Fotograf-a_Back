@@ -49,7 +49,7 @@ public class SecurityConfig  {
         .authorizeHttpRequests(authz -> authz
             .requestMatchers(HttpMethod.POST, "/admin/create").permitAll()
             .requestMatchers(HttpMethod.POST, "/admin/login").permitAll()
-            .requestMatchers(HttpMethod.GET, "/gallery", "/gallery/categories", "/gallery/category/**", "/gallery/image/**", "/random/images").permitAll()
+            .requestMatchers(HttpMethod.GET, "/gallery", "/gallery/categories", "/gallery/category/**", "/gallery/image/**", "gallery/random/images").permitAll()
             .requestMatchers(HttpMethod.POST,"/gallery/image").authenticated()
             .requestMatchers(HttpMethod.DELETE,"/gallery/{id}").authenticated()
             .requestMatchers(HttpMethod.PUT,"/gallery/image/{id}").authenticated()
